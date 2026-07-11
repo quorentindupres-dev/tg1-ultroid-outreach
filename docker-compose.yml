@@ -1,14 +1,41 @@
 services:
-  worker:
-    build: .
+  redis:
+    image: redis:7-alpine
+    container_name: tg1-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  ultroid:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tg1-ultroid
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
-      REDIS_URI: $REDIS_URI
-      REDIS_PASSWORD: $REDIS_PASSWORD
-      SESSION: $SESSION
-      API_ID: $API_ID  # defaults to None
-      API_HASH: $API_HASH  # defaults to None
-      MONGO_URI: $MONGO_URI  # defaults to None
-      BOT_TOKEN: $BOT_TOKEN # Not mandatory
-      LOG_CHANNEL: $LOG_CHANNEL # Not mandatory
-      DATABASE_URL: $DATABASE_URL  # defaults to None
-      OKTETO_TOKEN: $OKTETO_TOKEN
+      REDIS_URI: ${REDIS_URI:-redis://redis:6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      SESSION: ${SESSION}
+      API_ID: ${API_ID}
+      API_HASH: ${API_HASH}
+      SESSION2: ${SESSION2:-}
+      SESSION3: ${SESSION3:-}
+      SESSION4: ${SESSION4:-}
+      SESSION5: ${SESSION5:-}
+      BOT_TOKEN: ${BOT_TOKEN:-}
+      LOG_CHANNEL: ${LOG_CHANNEL:-}
+    volumes:
+      - ./sessions:/root/TeamUltroid/sessions
+    env_file:
+      - .env
+
+volumes:
+  redis_data:
